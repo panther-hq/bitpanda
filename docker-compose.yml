@@ -1,0 +1,51 @@
+version: "3.9"
+services:
+  nginx:
+    container_name: bitpanda_nginx
+    hostname: bitpanda_nginx
+    build:
+      context: docker/nginx
+    volumes:
+      - ./docker/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ./app:/home/bitpanda/
+    ports:
+      - 80:80
+    depends_on:
+      - php
+    networks:
+      - bitpanda
+  php:
+    container_name: bitpanda_php
+    hostname: bitpanda_php
+    build:
+      context: docker/php
+      args:
+        USER_UID: 1000
+        USER_GID: 1000
+        USER_NAME: 'bitpanda'
+        USER_GROUP: 'bitpanda'
+    volumes:
+      - ./app:/home/bitpanda/
+    networks:
+      - bitpanda
+    depends_on:
+      - mysql
+    working_dir: /home/bitpanda
+  mysql:
+    container_name: bitpanda_mysql
+    hostname: bitpanda_mysql
+    build:
+      context: docker/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=bitpanda
+      - MYSQL_USER=bitpanda
+      - MYSQL_PASSWORD=bitpanda
+    volumes:
+      - ./storage/mysql/data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    networks:
+      - bitpanda
+networks:
+  bitpanda:
